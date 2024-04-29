@@ -1,0 +1,154 @@
+{
+    "name": "Add song to Spotify from webhook",
+    "nodes": [
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https://songwhip.com/api/songwhip/create",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "url",
+                            "value": "={{ $json.url }}"
+                        },
+                        {
+                            "name": "country",
+                            "value": "US"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "35037b77-9307-4c27-813d-ad917ca74e1a",
+            "name": "HTTP Request",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                1200,
+                280
+            ]
+        },
+        {
+            "parameters": {
+                "mode": "runOnceForEachItem",
+                "jsCode": "function getSubstringBeforeAmpersand(str) {\n  const ampersandIndex = str.indexOf('&');\n  if (ampersandIndex === -1) {\n    // No '&' character found, return the original string\n    return str;\n  } else {\n    // Return the substring before the '&' character\n    return str.substring(0, ampersandIndex);\n  }\n}\nreturn {url: getSubstringBeforeAmpersand($json.body.url)}"
+            },
+            "id": "93fdfe3b-13b9-44ad-ba45-05f3c72239f5",
+            "name": "Code",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                940,
+                180
+            ]
+        },
+        {
+            "parameters": {
+                "resource": "playlist",
+                "id": "spotify:playlist:your_playlist_id",
+                "trackID": "=spotify:track:{{ $json[\"trackID\"] }}",
+                "additionalFields": {}
+            },
+            "id": "4304b65f-8a04-490c-b0be-ef91e9b69509",
+            "name": "Spotify",
+            "type": "n8n-nodes-base.spotify",
+            "typeVersion": 1,
+            "position": [
+                1720,
+                280
+            ],
+            "credentials": {}
+        },
+        {
+            "parameters": {
+                "mode": "runOnceForEachItem",
+                "jsCode": "function getTrackID(str) {\n  const trackPrefix = \"track/\";\n  const trackStartIndex = str.indexOf(trackPrefix) + trackPrefix.length;\n\n  if (trackStartIndex > trackPrefix.length) {\n    return str.substring(trackStartIndex);\n  }\n\n  return \"\";\n}\nreturn {trackID: getTrackID($json.data.item.links.spotify[0].link)}"
+            },
+            "id": "dfd503bc-634f-45b5-bffb-0295177a3a68",
+            "name": "Code1",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1440,
+                180
+            ]
+        },
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "bf83e02b-2416-468a-ad1a-ac1b8f955265",
+                "options": {
+                    "rawBody": false
+                }
+            },
+            "id": "d47069b5-8eb9-4169-b403-ea666e160465",
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 2,
+            "position": [
+                560,
+                400
+            ],
+            "webhookId": "bf83e02b-2416-468a-ad1a-ac1b8f955265"
+        }
+    ],
+    "pinData": {},
+    "connections": {
+        "HTTP Request": {
+            "main": [
+                [
+                    {
+                        "node": "Code1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Code": {
+            "main": [
+                [
+                    {
+                        "node": "HTTP Request",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Code1": {
+            "main": [
+                [
+                    {
+                        "node": "Spotify",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Code",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": true,
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "c1b190a9-e812-49ce-972c-0b549956fb75",
+    "meta": {
+        "templateCredsSetupCompleted": true,
+        "instanceId": "6f33effb04d5750050a9d609a15b71ad3fd6df444f067b6997664d2fff436af5"
+    },
+    "id": "4KM0H2ScBA4f1F5K",
+    "tags": []
+}
